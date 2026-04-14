@@ -1,6 +1,8 @@
 from pathlib import Path
 from fastapi import HTTPException, status
 
+from src.ingestion.config import IngestionConfig, MissingDataStrategy
+from src.ingestion.processor import SensorDataProcessor
 from src.ingestion.schema_loader import load_schema
 from src.ingestion.validator import SensorDataValidator
 from src.repositories.sensor_repository import SensorRepository
@@ -30,12 +32,22 @@ def process_station_data(
     schema = load_schema(SCHEMA_PATH)
     validator = SensorDataValidator(schema=schema)
     report = validator.validate_readings(readings_df)
+
+    processor_config = IngestionConfig(
+        resample_frequency=resample_frequency,
+        missing_data_strategy=MissingDataStrategy.DROP,
+        fill_value=0.0,
+    )
+    processor = SensorDataProcessor(config=processor_config)
+    processed_df = processor.process(readings_df)
+
     return ProcessStationResponse(
         station_id=station_id,
         status="accepted",
         message=(
-            f"Loaded {len(readings_df)} rows. "
-            f"Found {len(report.issues)} validation issues."
+            f"Loaded {len(readings_df)} rows, "
+            f"processed into {len(processed_df)} rows, "
+            f"found {len(report.issues)} validation issues."
         ),
         start_time=start_time,
         end_time=end_time,

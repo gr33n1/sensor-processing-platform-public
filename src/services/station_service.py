@@ -1,4 +1,3 @@
-from pathlib import Path
 from fastapi import HTTPException, status
 
 from src.ingestion.schema_loader import load_schema
@@ -6,8 +5,7 @@ from src.ingestion.validator import SensorDataValidator
 from src.repositories.sensor_repository import SensorRepository
 from src.schemas import MetricsResponse, ProcessStationResponse
 
-DB_PATH = Path(__file__).resolve().parents[2] / "sensor_data.db"
-SCHEMA_PATH = Path(__file__).resolve().parents[2] / "sensor_schema.json"
+from src.config import DB_PATH, SCHEMA_PATH
 
 def process_station_data(
     station_id: str,

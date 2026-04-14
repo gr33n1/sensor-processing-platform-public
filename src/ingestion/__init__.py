@@ -1,5 +1,5 @@
 from src.ingestion.models import DataQualityIssue, IssueSeverity, ProcessingReport
-from src.ingestion.schema_loader import load_schema
+from src.ingestion.schema_loader import SchemaLoader
 from src.ingestion.validator import SensorDataValidator
 
 __all__ = [
@@ -7,5 +7,5 @@ __all__ = [
     "IssueSeverity",
     "ProcessingReport",
     "SensorDataValidator",
-    "load_schema",
+    "SchemaLoader"
 ]

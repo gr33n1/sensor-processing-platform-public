@@ -1,10 +1,13 @@
 from pathlib import Path
+from fastapi import HTTPException, status
 
+from src.ingestion.schema_loader import load_schema
+from src.ingestion.validator import SensorDataValidator
 from src.repositories.sensor_repository import SensorRepository
 from src.schemas import MetricsResponse, ProcessStationResponse
 
 DB_PATH = Path(__file__).resolve().parents[2] / "sensor_data.db"
-
+SCHEMA_PATH = Path(__file__).resolve().parents[2] / "sensor_schema.json"
 
 def process_station_data(
     station_id: str,
@@ -18,11 +21,22 @@ def process_station_data(
         start_time=start_time,
         end_time=end_time,
     )
+    if readings_df.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No sensor readings found for station_id={station_id}",
+        )
 
+    schema = load_schema(SCHEMA_PATH)
+    validator = SensorDataValidator(schema=schema)
+    report = validator.validate_readings(readings_df)
     return ProcessStationResponse(
         station_id=station_id,
         status="accepted",
-        message=f"Loaded {len(readings_df)} rows. Processing not implemented yet.",
+        message=(
+            f"Loaded {len(readings_df)} rows. "
+            f"Found {len(report.issues)} validation issues."
+        ),
         start_time=start_time,
         end_time=end_time,
         resample_frequency=resample_frequency,
